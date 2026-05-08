@@ -65,7 +65,14 @@ public class Message {
         if (event.getData() == null) {
             return null;
         }
-        return Json.decodeValue(Buffer.buffer(event.getData().toBytes()), Map.class);
+        Buffer buffer = Buffer.buffer(event.getData().toBytes());
+        try {
+            return Json.decodeValue(buffer, Map.class);
+        } catch (io.vertx.core.json.DecodeException e) {
+            // Data may be a JSON-encoded string containing a JSON object
+            String raw = Json.decodeValue(buffer, String.class);
+            return Json.decodeValue(raw, Map.class);
+        }
     }
 
     public MessageType getType() {
